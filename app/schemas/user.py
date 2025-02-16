@@ -1,19 +1,25 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from uuid import UUID
 
-class UserCreate(BaseModel):
-    username: str
-    password: str
+class UserBase(BaseModel):
+    email: EmailStr
     is_admin: bool = False
+
+class UserCreate(UserBase):
+    password: str
+    
+class UserUpdate(BaseModel):
+    password: str | None = None
+    is_admin: bool | None = None
     
 class UserLogin(BaseModel):
-    username: str
+    email: str
     password: str
-
-class UserResponse(BaseModel):
+    
+class UserResponse(UserBase):
     id: UUID
-    username: str
-    is_admin: bool
-
+    
     class Config:
         from_attributes = True  
+    
+

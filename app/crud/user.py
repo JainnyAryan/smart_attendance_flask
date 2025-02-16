@@ -1,24 +1,45 @@
 from sqlalchemy.orm import Session
 from app.models.user import User
-from app.schemas.user import UserCreate
+from app.schemas.user import UserCreate, UserUpdate
 from passlib.context import CryptContext
 
-# Password hashing setup
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Function to hash password
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
-# Function to create a new user (register)
 def create_user(db: Session, user: UserCreate):
-    hashed_password = hash_password(user.password)  # Hash the password before storing
-    db_user = User(username=user.username, hashed_password=hashed_password, is_admin=user.is_admin)
+    hashed_password = hash_password(user.password)
+    db_user = User(email=user.email, hashed_password=hashed_password, is_admin=user.is_admin)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     return db_user
 
-# Function to get user by username
-def get_user_by_username(db: Session, username: str):
-    return db.query(User).filter(User.username == username).first()
+def get_user_by_email(db: Session, email: str):
+    return db.query(User).filter(User.email == email).first()
+
+def get_all_users(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(User).offset(skip).limit(limit).all()
+
+def update_user(db: Session, email: str, user_update: UserUpdate):
+    db_user = db.query(User).filter(User.email == email).first()
+    if not db_user:
+        return None
+    
+    if user_update.password:
+        db_user.hashed_password = hash_password(user_update.password)
+    if user_update.is_admin is not None:
+        db_user.is_admin = user_update.is_admin
+    
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+def delete_user(db: Session, email: str):
+    db_user = db.query(User).filter(User.email == email).first()
+    if not db_user:
+        return None
+    db.delete(db_user)
+    db.commit()
+    return db_user
