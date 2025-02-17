@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+import os
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
@@ -9,9 +11,10 @@ from app.database import get_db
 
 # OAuth2 scheme for extracting token from headers
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+load_dotenv()
 
 # Change SECRET_KEY in production!
-SECRET_KEY = "mysecretkey"
+SECRET_KEY = os.getenv("PSWD_HASH_SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60  # Token expires in 60 minutes
 
