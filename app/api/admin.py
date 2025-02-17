@@ -12,7 +12,7 @@ from app.schemas.designation import DesignationCreate, DesignationUpdate
 from app.database import get_db
 from app.crud.stats import get_counts
 from app.schemas.stats import StatsResponse
-from app.utils.email import generate_unique_email
+from app.utils.email import *
 
 router = APIRouter()
 
@@ -61,9 +61,9 @@ def delete_employee_details(emp_id: UUID, db: Session = Depends(get_db)):
     return db_employee
 
 
-@router.get("/employees/suggest-email/{name}")
+@router.get("/employees/suggest-email-emp-code/{name}")
 def suggest_email(name: str, db: Session = Depends(get_db)):
-    return {"suggested_email": generate_unique_email(db, name)}
+    return {"suggested_email": generate_unique_email(db, name), "suggested_emp_code" : generate_emp_code(db, name)}
 
 # ---------DEPT-------------------
 

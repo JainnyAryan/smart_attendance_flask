@@ -2,31 +2,46 @@ import random
 import string
 from uuid import UUID
 from sqlalchemy.orm import Session, joinedload
+
+from app.utils.email import send_email
 from ..models.employee import Employee
 from ..schemas.employee import EmployeeCreate, EmployeeUpdate
 from .user import *
 from ..schemas.user import *
 
 
-
 def create_employee(db: Session, employee: EmployeeCreate):
+    password = "".join(random.choices(
+        string.ascii_letters + string.digits, k=15))
+    db_user = create_user(db, UserCreate(is_admin=False,
+                                         email=employee.email, password=password))
     db_employee = Employee(**employee.dict())
+    db_employee.user_id = db_user.id
     db.add(db_employee)
     db.commit()
     db.refresh(db_employee)
-    password = "".join(random.choices(
-        string.ascii_letters + string.digits, k=15))
-    create_user(db, UserCreate(is_admin=False,
-                email=db_employee.email, password=password))
     print(db_employee.email, password)
+    email_subject = "Welcome to the My Org!"
+    email_content = f"""
+        <h3>Dear {employee.name},</h3>
+        <p>Here are your login credentials:</p>
+        <ul>
+            <li>Email: {employee.email}</li>
+            <li>Password: {password}</li>
+        </ul>
+        <p>Please change your password after logging in.</p>
+        <p>Best Regards,<br>My Org</p>
+    """
+
+    send_email(employee.email, email_subject, email_content)
     return db_employee
 
 
 def get_employee(db: Session, emp_id: UUID):
     return db.query(Employee).options(
-        joinedload(Employee.shift),  
-        joinedload(Employee.department), 
-        joinedload(Employee.designation) 
+        joinedload(Employee.shift),
+        joinedload(Employee.department),
+        joinedload(Employee.designation)
     ).filter(Employee.id == emp_id).first()
 
 
