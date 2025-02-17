@@ -1,6 +1,7 @@
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from app.auth.auth import get_current_admin
 from app.crud.employee import create_employee, get_employee, get_all_employees, update_employee, delete_employee
 from app.schemas.employee import EmployeeCreate, EmployeeUpdate
 from app.crud.department import create_department, get_department, get_all_departments, update_department, delete_department
@@ -14,7 +15,7 @@ from app.crud.stats import get_counts
 from app.schemas.stats import StatsResponse
 from app.utils.email import *
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_admin)])
 
 # -------------STATS--------------
 
