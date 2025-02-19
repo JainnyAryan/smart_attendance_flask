@@ -15,13 +15,6 @@ class EmployeeBase(BaseModel):
 
 class EmployeeCreate(EmployeeBase):
     pass
-
-
-class EmployeeOut(EmployeeCreate):
-    emp_id: UUID
-
-    class Config:
-        from_attributes = True
         
 
 class EmployeeUpdate(BaseModel):

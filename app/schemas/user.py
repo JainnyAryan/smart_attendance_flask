@@ -18,6 +18,7 @@ class UserLogin(BaseModel):
     
 class UserResponse(UserBase):
     id: UUID
+    # emp_id: UUID | None = None
     
     class Config:
         from_attributes = True  

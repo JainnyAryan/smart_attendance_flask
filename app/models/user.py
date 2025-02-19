@@ -9,4 +9,4 @@ class User(BaseModel):
     hashed_password = Column(String, nullable=False) 
     is_admin = Column(Boolean, default=False) 
     
-    employee = relationship("Employee", back_populates="user")
+    employee = relationship("Employee", back_populates="user", cascade="all, delete")

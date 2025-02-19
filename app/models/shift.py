@@ -18,4 +18,4 @@ class Shift(BaseModel):
     early_going_mins = Column(DECIMAL(5, 2), nullable=False)
     same_day = Column(Integer, default=1) 
 
-    employees = relationship("Employee", back_populates="shift")
+    employees = relationship("Employee", back_populates="shift", cascade="all, delete")

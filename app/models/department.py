@@ -9,4 +9,4 @@ class Department(BaseModel):
     dept_code = Column(String, unique=True, index=True)
     name = Column(String)
 
-    employees = relationship("Employee", back_populates="department")
+    employees = relationship("Employee", back_populates="department", cascade="all, delete")

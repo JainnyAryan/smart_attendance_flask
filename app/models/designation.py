@@ -9,4 +9,4 @@ class Designation(BaseModel):
     designation_code = Column(String, unique=True, index=True)
     name = Column(String, nullable=False)
 
-    employees = relationship("Employee", back_populates="designation")
+    employees = relationship("Employee", back_populates="designation", cascade="all, delete")
