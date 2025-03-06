@@ -15,6 +15,7 @@ from app.crud.stats import get_counts
 from app.schemas.stats import StatsResponse
 from app.utils.email import *
 
+
 router = APIRouter(dependencies=[Depends(get_current_admin)])
 
 # -------------STATS--------------

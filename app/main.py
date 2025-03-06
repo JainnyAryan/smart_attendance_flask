@@ -29,8 +29,8 @@ app.add_middleware(
 Base.metadata.create_all(bind=engine)
 
 # Include Routers
-app.include_router(employee_api.router, prefix="/api/employee")
 app.include_router(auth.router, prefix="/api")
+app.include_router(employee_api.router, prefix="/api/employee")
 app.include_router(admin.router, prefix="/api/admin")
 app.include_router(user.router, prefix="/api")
 app.include_router(me.router, prefix="/api")
