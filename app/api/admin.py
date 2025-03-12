@@ -1,7 +1,10 @@
+from datetime import timedelta
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.auth.auth import get_current_admin
+from app.crud.analytics import calculate_time_wastage
 from app.crud.employee import create_employee, get_employee, get_all_employees, update_employee, delete_employee
 from app.schemas.employee import EmployeeCreate, EmployeeUpdate
 from app.crud.department import create_department, get_department, get_all_departments, update_department, delete_department
@@ -13,6 +16,7 @@ from app.schemas.designation import DesignationCreate, DesignationUpdate
 from app.database import get_db
 from app.crud.stats import get_counts
 from app.schemas.stats import StatsResponse
+from app.utils.attendance import determine_attendance_status
 from app.utils.email import *
 
 
@@ -65,7 +69,7 @@ def delete_employee_details(emp_id: UUID, db: Session = Depends(get_db)):
 
 @router.get("/employees/suggest-email-emp-code/{name}")
 def suggest_email(name: str, db: Session = Depends(get_db)):
-    return {"suggested_email": generate_unique_email(db, name), "suggested_emp_code" : generate_emp_code(db, name)}
+    return {"suggested_email": generate_unique_email(db, name), "suggested_emp_code": generate_emp_code(db, name)}
 
 # ---------DEPT-------------------
 
@@ -173,3 +177,87 @@ def delete_designation_details(designation_id: UUID, db: Session = Depends(get_d
     if db_designation is None:
         raise HTTPException(status_code=404, detail="Designation not found")
     return db_designation
+
+
+# --------ANALYTICS----------
+@router.get("/analytics/{emp_id}")
+def get_employee_analytics(emp_id: str, start_date: str, end_date: str, db: Session = Depends(get_db)):
+    time_wastage_data = calculate_time_wastage(
+        db=db, emp_id=emp_id, end_date=end_date, start_date=start_date)
+    return {"time_wastage_data": time_wastage_data}
+
+
+# ---------CALENDAR---------------
+@router.get("/attendance/calendar")
+def get_attendance_calendar(
+    emp_id: str,
+    start_date: str,
+    end_date: str,
+    db: Session = Depends(get_db)
+):
+    try:
+        # Convert string dates to datetime.date
+        parsed_start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+        parsed_end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+        # SQL Query to fetch biometric logs and shifts
+        query = text("""
+            SELECT 
+                b.in_time,
+                b.out_time,
+                b.in_time::date AS log_date,
+                s.start_time,
+                s.end_time,
+                s.total_hours,
+                s.half_day_shift_hours
+            FROM biometric_logs b
+            LEFT JOIN employees e ON b.emp_id = e.id
+            LEFT JOIN shifts s ON e.shift_id = s.id
+            WHERE b.emp_id = :emp_id
+              AND b.in_time::date BETWEEN :start_date AND :end_date
+            ORDER BY log_date;
+        """)
+
+        # Execute query and get results with key-based access
+        results = db.execute(query, {
+            "emp_id": emp_id,
+            "start_date": start_date,
+            "end_date": end_date
+        }).mappings().all()  # <-- Converts rows to key-value dicts
+
+        # Prepare attendance data
+        calendar_data = {}
+
+        # Calculate attendance status for each result
+        for result in results:
+            log_date = result["log_date"]
+            status = determine_attendance_status(
+                result["in_time"],
+                result["out_time"],
+                result["start_time"],
+                result["end_time"],
+                result["total_hours"],
+                result["half_day_shift_hours"]
+            )
+            calendar_data[log_date] = status
+
+        # Ensure all dates are covered
+        current_date = parsed_start_date
+        while current_date <= parsed_end_date:
+            if current_date not in calendar_data:
+                calendar_data[current_date] = "Absent"
+            current_date += timedelta(days=1)
+
+        # Format for frontend
+        formatted_calendar = [
+            {"date": str(date), "status": status}
+            for date, status in sorted(calendar_data.items())
+        ]
+
+        return {"employee_id": emp_id, "calendar": formatted_calendar}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Attendance logic
