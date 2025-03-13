@@ -28,13 +28,13 @@ def log_out(log: SystemLogOut, db: Session = Depends(get_db)):
             status_code=404, detail="Active session not found.")
 
 
-@router.get("/system-log/employee/{emp_id}", response_model=list[SystemLogResponse])
-def logs_by_employee(emp_id: UUID, db: Session = Depends(get_db)):
+@router.get("/system-log/employee/latest/{emp_id}", response_model=list[SystemLogResponse])
+def latest_log_of_employee(emp_id: UUID, db: Session = Depends(get_db)):
     logs = get_logs_by_emp_id(db, emp_id)
     if not logs:
         raise HTTPException(
             status_code=404, detail="No logs found for this employee.")
-    return logs
+    return logs[0]
 
 
 @router.delete("/system-log/{log_id}", response_model=SystemLogResponse)
@@ -53,44 +53,15 @@ def create_log(biometric_log: BiometricLogCreate, db: Session = Depends(get_db))
     return create_biometric_log(db, biometric_log)
 
 
-# Get all biometric logs (optionally filter by emp_id)
-@router.get("/biometric-logs", response_model=list[BiometricLogResponse])
-def list_logs(emp_id: UUID = None, db: Session = Depends(get_db)):
-    return get_biometric_logs(db, emp_id)
-
-
 # Get logs for a specific employee
-@router.get("/biometric-logs/employee/{emp_id}", response_model=list[BiometricLogResponse])
-def get_logs_by_employee(emp_id: UUID, db: Session = Depends(get_db)):
+@router.get("/biometric-logs/employee/latest/{emp_id}", response_model=list[BiometricLogResponse])
+def get_latest_log_by_employee(emp_id: UUID, db: Session = Depends(get_db)):
     logs = get_biometric_logs_by_employee(db, emp_id)
     if not logs:
         raise HTTPException(
             status_code=404, detail="No logs found for this employee")
-    return logs
+    return logs[0]
 
 
-# Get a single biometric log by ID
-@router.get("/biometric-logs/{log_id}", response_model=BiometricLogResponse)
-def read_log(log_id: UUID, db: Session = Depends(get_db)):
-    log = get_biometric_log(db, log_id)
-    if log is None:
-        raise HTTPException(status_code=404, detail="Biometric log not found")
-    return log
 
 
-# Update a biometric log by ID
-@router.put("/biometric-logs/{log_id}", response_model=BiometricLogResponse)
-def update_log(log_id: UUID, biometric_log: BiometricLogUpdate, db: Session = Depends(get_db)):
-    updated_log = update_biometric_log(db, log_id, biometric_log)
-    if updated_log is None:
-        raise HTTPException(status_code=404, detail="Biometric log not found")
-    return updated_log
-
-
-# Delete a biometric log by ID
-@router.delete("/biometric-logs/{log_id}", response_model=BiometricLogResponse)
-def delete_log(log_id: UUID, db: Session = Depends(get_db)):
-    deleted_log = delete_biometric_log(db, log_id)
-    if deleted_log is None:
-        raise HTTPException(status_code=404, detail="Biometric log not found")
-    return deleted_log

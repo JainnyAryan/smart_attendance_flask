@@ -5,7 +5,10 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.auth.auth import get_current_admin
 from app.crud.analytics import calculate_time_wastage
+from app.crud.biometric_log import *
 from app.crud.employee import create_employee, get_employee, get_all_employees, update_employee, delete_employee
+from app.crud.system_log import get_logs_by_emp_id, get_logs_by_emp_id_in_date_range
+from app.schemas.biometric_log import *
 from app.schemas.employee import EmployeeCreate, EmployeeUpdate
 from app.crud.department import create_department, get_department, get_all_departments, update_department, delete_department
 from app.schemas.department import DepartmentCreate, DepartmentUpdate
@@ -16,6 +19,7 @@ from app.schemas.designation import DesignationCreate, DesignationUpdate
 from app.database import get_db
 from app.crud.stats import get_counts
 from app.schemas.stats import StatsResponse
+from app.schemas.system_log import SystemLogResponse
 from app.utils.attendance import determine_attendance_status
 from app.utils.email import *
 
@@ -260,4 +264,74 @@ def get_attendance_calendar(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Attendance logic
+#---------------SYSTEM LOGS----------------
+@router.get("/system-logs/employee/{emp_id}", response_model=list[SystemLogResponse])
+def get_logs_of_employee(emp_id: UUID, db: Session = Depends(get_db)):
+    logs = get_logs_by_emp_id(db, emp_id)
+    if not logs:
+        raise HTTPException(
+            status_code=404, detail="No logs found for this employee.")
+    return logs
+
+
+
+# Get system logs for an employee within a date range
+@router.get("/system-logs/employee/{emp_id}/date-range", response_model=list[SystemLogResponse])
+def get_system_logs_in_date_range(emp_id: UUID, start_date: date, end_date: date, db: Session = Depends(get_db)):
+    logs = get_logs_by_emp_id_in_date_range(db, emp_id, start_date, end_date)
+    if not logs:
+        raise HTTPException(status_code=404, detail="No system logs found in the given date range.")
+    return logs
+
+
+#----------BIOMETRIC LOGS-------------
+# Get all biometric logs (optionally filter by emp_id)
+@router.get("/biometric-logs", response_model=list[BiometricLogResponse])
+def list_logs(emp_id: UUID = None, db: Session = Depends(get_db)):
+    return get_biometric_logs(db, emp_id)
+
+
+# Get a single biometric log by ID
+@router.get("/biometric-logs/{log_id}", response_model=BiometricLogResponse)
+def read_log(log_id: UUID, db: Session = Depends(get_db)):
+    log = get_biometric_log(db, log_id)
+    if log is None:
+        raise HTTPException(status_code=404, detail="Biometric log not found")
+    return log
+
+
+# Get logs for a specific employee
+@router.get("/biometric-logs/employee/{emp_id}", response_model=list[BiometricLogResponse])
+def get_logs_by_employee(emp_id: UUID, db: Session = Depends(get_db)):
+    logs = get_biometric_logs_by_employee(db, emp_id)
+    if not logs:
+        raise HTTPException(
+            status_code=404, detail="No logs found for this employee")
+    return logs
+
+
+# Get biometric logs for an employee within a date range
+@router.get("/biometric-logs/employee/{emp_id}/date-range", response_model=list[BiometricLogResponse])
+def get_biometric_logs_in_date_range(emp_id: UUID, start_date: date, end_date: date, db: Session = Depends(get_db)):
+    logs = get_employee_biometric_logs_by_date_range(db, emp_id, start_date, end_date)
+    if not logs:
+        raise HTTPException(status_code=404, detail="No biometric logs found in the given date range.")
+    return logs
+
+
+# Delete a biometric log by ID
+@router.delete("/biometric-logs/{log_id}", response_model=BiometricLogResponse)
+def delete_log(log_id: UUID, db: Session = Depends(get_db)):
+    deleted_log = delete_biometric_log(db, log_id)
+    if deleted_log is None:
+        raise HTTPException(status_code=404, detail="Biometric log not found")
+    return deleted_log
+
+
+# Update a biometric log by ID
+@router.put("/biometric-logs/{log_id}", response_model=BiometricLogResponse)
+def update_log(log_id: UUID, biometric_log: BiometricLogUpdate, db: Session = Depends(get_db)):
+    updated_log = update_biometric_log(db, log_id, biometric_log)
+    if updated_log is None:
+        raise HTTPException(status_code=404, detail="Biometric log not found")
+    return updated_log

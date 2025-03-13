@@ -1,9 +1,10 @@
+from sqlalchemy import Date, cast
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
 from app.models.system_log import SystemLog
 from app.schemas.system_log import SystemLogIn, SystemLogOut
 from uuid import UUID
-from datetime import datetime
+from datetime import date, datetime
 
 
 def create_log_in(db: Session, log: SystemLogIn):
@@ -40,6 +41,14 @@ def get_all_logs(db: Session, skip: int = 0, limit: int = 10):
 
 def get_logs_by_emp_id(db: Session, emp_id: UUID):
     return db.query(SystemLog).filter(SystemLog.emp_id == emp_id).order_by(SystemLog.start_time.desc()).all()
+
+
+def get_logs_by_emp_id_in_date_range(db: Session, emp_id: UUID, start_date: date, end_date: date):
+    return db.query(SystemLog).filter(
+        SystemLog.emp_id == emp_id,
+        cast(SystemLog.start_time, Date) >= start_date,
+        cast(SystemLog.end_time, Date) <= end_date
+    ).all()
 
 
 def delete_log(db: Session, log_id: UUID):

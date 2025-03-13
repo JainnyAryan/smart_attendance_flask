@@ -1,3 +1,5 @@
+from datetime import date
+from sqlalchemy import Date, cast
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from app.models.biometric_log import BiometricLog
@@ -28,7 +30,15 @@ def get_biometric_logs(db: Session, emp_id: UUID = None):
 
 # Get biometric logs for a specific employee
 def get_biometric_logs_by_employee(db: Session, emp_id: UUID):
-    return db.query(BiometricLog).filter(BiometricLog.emp_id == emp_id).all()
+    return db.query(BiometricLog).filter(BiometricLog.emp_id == emp_id).order_by(BiometricLog.in_time.desc()).all()
+
+
+def get_employee_biometric_logs_by_date_range(db: Session, emp_id: UUID, start_date: date, end_date: date):
+    return db.query(BiometricLog).filter(
+        BiometricLog.emp_id == emp_id,
+        cast(BiometricLog.in_time, Date) >= start_date,
+        cast(BiometricLog.out_time, Date) <= end_date
+    ).all()
 
 
 # Update biometric log (by ID)
