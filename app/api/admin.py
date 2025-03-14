@@ -343,21 +343,21 @@ def update_log(log_id: UUID, biometric_log: BiometricLogUpdate, db: Session = De
 
 # ----------------PROJECTS-----------------
 # Create a new project
-@router.post("/", response_model=ProjectResponse)
+@router.post("/projects/", response_model=ProjectResponse)
 def create_project_api(project: ProjectCreate, db: Session = Depends(get_db)):
     return create_project(db, project)
 
 # Get all projects
 
 
-@router.get("/", response_model=List[ProjectResponse])
+@router.get("/projects/", response_model=List[ProjectResponse])
 def get_projects_api(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     return get_projects(db, skip, limit)
 
 # Get project by ID
 
 
-@router.get("/{project_id}", response_model=ProjectResponse)
+@router.get("/projects/{project_id}", response_model=ProjectResponse)
 def get_project_api(project_id: str, db: Session = Depends(get_db)):
     db_project = get_project(db, project_id)
     if not db_project:
@@ -367,7 +367,7 @@ def get_project_api(project_id: str, db: Session = Depends(get_db)):
 # Update a project
 
 
-@router.put("/{project_id}", response_model=ProjectResponse)
+@router.put("/projects/{project_id}", response_model=ProjectResponse)
 def update_project_api(project_id: str, project: ProjectUpdate, db: Session = Depends(get_db)):
     db_project = update_project(db, project_id, project)
     if not db_project:
@@ -377,7 +377,7 @@ def update_project_api(project_id: str, project: ProjectUpdate, db: Session = De
 # Delete a project
 
 
-@router.delete("/{project_id}", response_model=ProjectResponse)
+@router.delete("/projects/{project_id}", response_model=ProjectResponse)
 def delete_project_api(project_id: str, db: Session = Depends(get_db)):
     db_project = delete_project(db, project_id)
     if not db_project:

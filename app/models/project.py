@@ -1,11 +1,12 @@
 from sqlalchemy import Column, String, Text, Date, Integer, ARRAY, TIMESTAMP, func
 from sqlalchemy.dialects.postgresql import UUID
-from ..database import Base
+from ..database import BaseModel
 
-class Project(Base):
+
+class Project(BaseModel):
     __tablename__ = "projects"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    code = Column(String(20), unique=True, nullable=False)
     name = Column(String(100), nullable=False)
     description = Column(Text)
     start_date = Column(Date, nullable=False)
@@ -16,4 +17,5 @@ class Project(Base):
     required_skills = Column(ARRAY(String))
     min_experience = Column(Integer, default=0)
     created_at = Column(TIMESTAMP, server_default=func.now())
-    updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
+    updated_at = Column(
+        TIMESTAMP, server_default=func.now(), onupdate=func.now())
