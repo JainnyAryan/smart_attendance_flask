@@ -16,7 +16,7 @@ def get_project(db: Session, project_id: str):
 
 # Get all projects
 def get_projects(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(Project).offset(skip).limit(limit).order_by(Project.created_at.desc()).all()
+    return db.query(Project).order_by(Project.created_at.desc()).offset(skip).limit(limit).all()
 
 # Update a project
 def update_project(db: Session, project_id: str, project: ProjectUpdate):

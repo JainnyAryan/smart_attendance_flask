@@ -36,7 +36,7 @@ def create_log_out(db: Session, log: SystemLogOut):
 
 
 def get_all_logs(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(SystemLog).offset(skip).limit(limit).order_by(SystemLog.created_at.desc()).all()
+    return db.query(SystemLog).order_by(SystemLog.created_at.desc()).offset(skip).limit(limit).all()
 
 
 def get_logs_by_emp_id(db: Session, emp_id: UUID):

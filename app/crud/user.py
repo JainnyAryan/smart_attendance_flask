@@ -20,7 +20,7 @@ def get_user_by_email(db: Session, email: str):
     return db.query(User).filter(User.email == email).first()
 
 def get_all_users(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(User).offset(skip).limit(limit).order_by(User.created_at.desc()).all()
+    return db.query(User).order_by(User.created_at.desc()).offset(skip).limit(limit).all()
 
 def update_user(db: Session, email: str, user_update: UserUpdate):
     db_user = db.query(User).filter(User.email == email).first()

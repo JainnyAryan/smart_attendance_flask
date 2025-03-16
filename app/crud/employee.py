@@ -50,7 +50,7 @@ def get_all_employees(db: Session, skip: int = 0, limit: int = 100):
         joinedload(Employee.shift),
         joinedload(Employee.department),
         joinedload(Employee.designation)
-    ).offset(skip).limit(limit).order_by(Employee.created_at.desc()).all()
+    ).order_by(Employee.created_at.desc()).offset(skip).limit(limit).all()
 
 
 def update_employee(db: Session, emp_id: UUID, employee: EmployeeUpdate):
