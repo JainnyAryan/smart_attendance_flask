@@ -26,13 +26,13 @@ def get_biometric_logs(db: Session, emp_id: UUID = None):
     query = select(BiometricLog)
     if emp_id:
         query = query.filter(BiometricLog.emp_id == emp_id)
-    return db.execute(query.order_by(BiometricLog.created_at.desc())).scalars().all()
+    return db.execute(query.order_by(BiometricLog.in_time.desc())).scalars().all()
 
 # Get biometric logs for a specific employee
 
 
 def get_biometric_logs_by_employee(db: Session, emp_id: UUID):
-    return db.query(BiometricLog).filter(BiometricLog.emp_id == emp_id).order_by(BiometricLog.created_at.desc()).all()
+    return db.query(BiometricLog).filter(BiometricLog.emp_id == emp_id).order_by(BiometricLog.in_time.desc()).all()
 
 
 def get_employee_biometric_logs_by_date_range(db: Session, emp_id: UUID, start_date: date, end_date: date):
@@ -40,7 +40,7 @@ def get_employee_biometric_logs_by_date_range(db: Session, emp_id: UUID, start_d
         BiometricLog.emp_id == emp_id,
         cast(BiometricLog.in_time, Date) >= start_date,
         cast(BiometricLog.out_time, Date) <= end_date
-    ).order_by(BiometricLog.created_at.desc()).all()
+    ).order_by(BiometricLog.in_time.desc()).all()
 
 
 # Update biometric log (by ID)

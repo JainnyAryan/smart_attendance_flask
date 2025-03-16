@@ -36,11 +36,11 @@ def create_log_out(db: Session, log: SystemLogOut):
 
 
 def get_all_logs(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(SystemLog).order_by(SystemLog.created_at.desc()).offset(skip).limit(limit).all()
+    return db.query(SystemLog).order_by(SystemLog.start_time.desc()).offset(skip).limit(limit).all()
 
 
 def get_logs_by_emp_id(db: Session, emp_id: UUID):
-    return db.query(SystemLog).filter(SystemLog.emp_id == emp_id).order_by(SystemLog.created_at.desc()).all()
+    return db.query(SystemLog).filter(SystemLog.emp_id == emp_id).order_by(SystemLog.start_time.desc()).all()
 
 
 def get_logs_by_emp_id_in_date_range(db: Session, emp_id: UUID, start_date: date, end_date: date):
@@ -48,7 +48,7 @@ def get_logs_by_emp_id_in_date_range(db: Session, emp_id: UUID, start_date: date
         SystemLog.emp_id == emp_id,
         cast(SystemLog.start_time, Date) >= start_date,
         cast(SystemLog.end_time, Date) <= end_date
-    ).order_by(SystemLog.created_at.desc()).all()
+    ).order_by(SystemLog.start_time.desc()).all()
 
 
 def delete_log(db: Session, log_id: UUID):
