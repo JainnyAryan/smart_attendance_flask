@@ -13,7 +13,7 @@ def get_designation(db: Session, designation_id):
     return db.query(Designation).filter(Designation.id == designation_id).first()
 
 def get_all_designations(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(Designation).offset(skip).limit(limit).all()
+    return db.query(Designation).offset(skip).limit(limit).order_by(Designation.created_at.desc()).all()
 
 def update_designation(db: Session, designation_id, designation: DesignationUpdate):
     db_designation = get_designation(db, designation_id)

@@ -13,7 +13,7 @@ def get_department(db: Session, dept_id):
     return db.query(Department).filter(Department.id == dept_id).first()
 
 def get_all_departments(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(Department).offset(skip).limit(limit).all()
+    return db.query(Department).offset(skip).limit(limit).order_by(Department.created_at.desc()).all()
 
 def update_department(db: Session, dept_id, department: DepartmentUpdate):
     db_department = get_department(db, dept_id)

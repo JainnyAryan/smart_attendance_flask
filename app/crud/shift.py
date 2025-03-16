@@ -13,7 +13,7 @@ def get_shift(db: Session, shift_id):
     return db.query(Shift).filter(Shift.id == shift_id).first()
 
 def get_all_shifts(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(Shift).offset(skip).limit(limit).all()
+    return db.query(Shift).offset(skip).limit(limit).order_by(Shift.created_at.desc()).all()
 
 def update_shift(db: Session, shift_id, shift: ShiftUpdate):
     db_shift = get_shift(db, shift_id)

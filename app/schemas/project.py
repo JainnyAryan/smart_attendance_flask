@@ -28,3 +28,6 @@ class ProjectResponse(ProjectBase):
 
     class Config:
         from_attributes = True
+        
+class RequiredSkillsUpdate(BaseModel):
+    required_skills: List[str]

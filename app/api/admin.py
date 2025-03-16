@@ -347,16 +347,14 @@ def update_log(log_id: UUID, biometric_log: BiometricLogUpdate, db: Session = De
 def create_project_api(project: ProjectCreate, db: Session = Depends(get_db)):
     return create_project(db, project)
 
+
 # Get all projects
-
-
 @router.get("/projects/", response_model=List[ProjectResponse])
 def get_projects_api(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     return get_projects(db, skip, limit)
 
+
 # Get project by ID
-
-
 @router.get("/projects/{project_id}", response_model=ProjectResponse)
 def get_project_api(project_id: str, db: Session = Depends(get_db)):
     db_project = get_project(db, project_id)
@@ -364,9 +362,8 @@ def get_project_api(project_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Project not found")
     return db_project
 
+
 # Update a project
-
-
 @router.put("/projects/{project_id}", response_model=ProjectResponse)
 def update_project_api(project_id: str, project: ProjectUpdate, db: Session = Depends(get_db)):
     db_project = update_project(db, project_id, project)
@@ -382,4 +379,20 @@ def delete_project_api(project_id: str, db: Session = Depends(get_db)):
     db_project = delete_project(db, project_id)
     if not db_project:
         raise HTTPException(status_code=404, detail="Project not found")
+    return db_project
+
+
+@router.put("/projects/required-skills/{project_id}", response_model=ProjectResponse)
+def update_required_skills(
+    project_id: str, 
+    skills_update: RequiredSkillsUpdate,  # Updated to use a request body
+    db: Session = Depends(get_db)
+):
+    db_project = get_project(db, project_id)
+    if not db_project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    db_project.required_skills = skills_update.required_skills  # Update skills
+    db.commit()
+    db.refresh(db_project)
     return db_project
