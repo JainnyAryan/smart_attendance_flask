@@ -53,6 +53,8 @@ class ProjectResponse(ProjectBase):
 class ProjectMetadataResponse(BaseModel):
     statuses : List[str]
     priorities : List[str]
+    roles : List[str]
+    allocation_statuses : List[str]
     
     class Config:
         from_attributes = True

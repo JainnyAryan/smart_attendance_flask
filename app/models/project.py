@@ -5,16 +5,16 @@ from sqlalchemy.orm import mapped_column, relationship
 
 
 class ProjectStatus(enum.Enum):
-    PLANNED = "planned"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    ON_HOLD = "on_hold"
+    PLANNED = "PLANNED"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    ON_HOLD = "ON_HOLD"
 
 
 class ProjectPriority(enum.Enum):
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
 
 
 class Project(BaseModel):

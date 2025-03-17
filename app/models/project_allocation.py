@@ -6,23 +6,23 @@ import enum
 
 
 class ProjectRole(enum.Enum):
-    MANAGER = "manager"  # Oversees the project
-    TECH_LEAD = "tech_lead"  # Leads technical decisions
-    DEVELOPER = "developer"  # Writes and maintains code
-    DESIGNER = "designer"  # Works on UI/UX
-    TESTER = "tester"  # Ensures quality through testing
-    DATA_SCIENTIST = "data_scientist"  # Works on AI/ML parts
-    BUSINESS_ANALYST = "business_analyst"  # Defines project requirements
-    INTERN = "intern"  # Assists in development/testing
-    SUPPORT_ENGINEER = "support_engineer"  # Provides technical support
+    MANAGER = "MANAGER"  # Oversees the project
+    TECH_LEAD = "TECH_LEAD"  # Leads technical decisions
+    DEVELOPER = "DEVELOPER"  # Writes and maintains code
+    DESIGNER = "DESIGNER"  # Works on UI/UX
+    TESTER = "TESTER"  # Ensures quality through testing
+    DATA_SCIENTIST = "DATA_SCIENTIST"  # Works on AI/ML parts
+    BUSINESS_ANALYST = "BUSINESS_ANALYST"  # Defines project requirements
+    INTERN = "INTERN"  # Assists in development/testing
+    SUPPORT_ENGINEER = "SUPPORT_ENGINEER"  # Provides technical support
 
 
 class AllocationStatus(enum.Enum):
-    PENDING = "pending"  # Assigned but not yet started
-    ACTIVE = "active"  # Currently working on the project
-    COMPLETED = "completed"  # Finished work on the project
-    ON_HOLD = "on_hold"  # Temporarily stopped working
-    REMOVED = "removed"  # Removed from the project
+    PENDING = "PENDING"  # Assigned but not yet started
+    ACTIVE = "ACTIVE"  # Currently working on the project
+    COMPLETED = "COMPLETED"  # Finished work on the project
+    ON_HOLD = "ON_HOLD"  # Temporarily stopped working
+    REMOVED = "REMOVED"  # Removed from the project
 
 
 class ProjectAllocation(BaseModel):
