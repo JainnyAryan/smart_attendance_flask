@@ -1,6 +1,20 @@
-from sqlalchemy import Column, String, Text, Date, Integer, ARRAY, TIMESTAMP, func
-from sqlalchemy.dialects.postgresql import UUID
-from ..database import BaseModel
+import enum
+from sqlalchemy import Column, String, Text, Date, Integer, ARRAY, Enum
+from app.database import BaseModel
+from sqlalchemy.orm import mapped_column
+
+
+class ProjectStatus(enum.Enum):
+    PLANNED = "planned"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    ON_HOLD = "on_hold"
+
+
+class ProjectPriority(enum.Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
 
 
 class Project(BaseModel):
@@ -11,11 +25,10 @@ class Project(BaseModel):
     description = Column(Text)
     start_date = Column(Date, nullable=False)
     end_date = Column(Date)
-    status = Column(String(20), nullable=False, default="planned")
-    priority = Column(String(20), default="medium")
+    status = Column(Enum(ProjectStatus), nullable=False,
+                    default=ProjectStatus.PLANNED)
+    priority = Column(Enum(ProjectPriority), nullable=False,
+                      default=ProjectPriority.MEDIUM)
     max_team_size = Column(Integer)
     required_skills = Column(ARRAY(String))
     min_experience = Column(Integer, default=0)
-    created_at = Column(TIMESTAMP, server_default=func.now())
-    updated_at = Column(
-        TIMESTAMP, server_default=func.now(), onupdate=func.now())
