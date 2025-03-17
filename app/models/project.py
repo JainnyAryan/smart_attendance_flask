@@ -1,7 +1,7 @@
 import enum
 from sqlalchemy import Column, String, Text, Date, Integer, ARRAY, Enum
 from app.database import BaseModel
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import mapped_column, relationship
 
 
 class ProjectStatus(enum.Enum):
@@ -32,3 +32,5 @@ class Project(BaseModel):
     max_team_size = Column(Integer)
     required_skills = Column(ARRAY(String))
     min_experience = Column(Integer, default=0)
+    
+    allocations = relationship("ProjectAllocation", back_populates="project", passive_deletes=True)

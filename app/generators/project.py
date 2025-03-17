@@ -1,6 +1,7 @@
 import os
 import random
 from datetime import datetime, timedelta
+import time
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 from app.models.project import ProjectStatus, ProjectPriority
@@ -90,50 +91,51 @@ def random_date(start_date, end_date):
 
 def generate_projects(num_projects=10):
     with engine.connect() as conn:
-        trans = conn.begin()
-        try:
             for _ in range(num_projects):
-                project_code = f"PRJ-{random.randint(1000, 9999)}"
-                name = random.choice(PROJECT_NAMES)
-                description = random.choice(DESCRIPTIONS)
+                try:
+                    trans = conn.begin()
+                    project_code = f"PRJ-{random.randint(1000, 9999)}"
+                    name = random.choice(PROJECT_NAMES)
+                    description = random.choice(DESCRIPTIONS)
 
-                # ✅ Convert Enum to string
-                status = random.choice(STATUSES).value
-                # ✅ Convert Enum to string
-                priority = random.choice(PRIORITIES).value
+                    # ✅ Convert Enum to string
+                    status = random.choice(STATUSES).value
+                    # ✅ Convert Enum to string
+                    priority = random.choice(PRIORITIES).value
 
-                max_team_size = random.randint(*TEAM_SIZE_RANGE)
-                required_skills = random.sample(SKILLS, random.randint(2, 4))
-                min_experience = random.randint(*EXPERIENCE_RANGE)
+                    max_team_size = random.randint(*TEAM_SIZE_RANGE)
+                    required_skills = random.sample(SKILLS, random.randint(2, 4))
+                    min_experience = random.randint(*EXPERIENCE_RANGE)
 
-                # Define start and end dates
-                start_date = random_date(
-                    datetime(2024, 1, 1), datetime(2025, 1, 1))
-                end_date = start_date + timedelta(days=random.randint(30, 180))
+                    # Define start and end dates
+                    start_date = random_date(
+                        datetime(2024, 1, 1), datetime(2025, 1, 1))
+                    end_date = start_date + timedelta(days=random.randint(30, 180))
 
-                # Insert into DB
-                conn.execute(text("""
-                INSERT INTO projects (id, code, name, description, start_date, end_date, status, priority, max_team_size, required_skills, min_experience)
-                VALUES (gen_random_uuid(), :code, :name, :description, :start_date, :end_date, :status, :priority, :max_team_size, :required_skills, :min_experience)
-            """), {
-                    "code": project_code,
-                    "name": name,
-                    "description": description,
-                    "start_date": start_date.date(),
-                    "end_date": end_date.date(),
-                    "status": status.upper(),  
-                    "priority": priority.upper(),
-                    "max_team_size": max_team_size,
-                    "required_skills": required_skills,
-                    "min_experience": min_experience
-                })
-
-            trans.commit()
+                    # Insert into DB
+                    conn.execute(text("""
+                    INSERT INTO projects (id, code, name, description, start_date, end_date, status, priority, max_team_size, required_skills, min_experience)
+                    VALUES (gen_random_uuid(), :code, :name, :description, :start_date, :end_date, :status, :priority, :max_team_size, :required_skills, :min_experience)
+                """), {
+                        "code": project_code,
+                        "name": name,
+                        "description": description,
+                        "start_date": start_date.date(),
+                        "end_date": end_date.date(),
+                        "status": status.upper(),  
+                        "priority": priority.upper(),
+                        "max_team_size": max_team_size,
+                        "required_skills": required_skills,
+                        "min_experience": min_experience
+                    })
+                    time.sleep(0.2)
+                    trans.commit()
+                except Exception as e:
+                    trans.rollback()
+                    print(f"❌ Error inserting projects: {e}")
+                
             print(f"✅ Successfully inserted {num_projects} dummy projects.")
 
-        except Exception as e:
-            trans.rollback()
-            print(f"❌ Error inserting projects: {e}")
 
 
 # Run script

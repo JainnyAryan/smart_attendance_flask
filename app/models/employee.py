@@ -20,3 +20,4 @@ class Employee(BaseModel):
     department = relationship("Department", back_populates="employees", passive_deletes=True)
     designation = relationship("Designation", back_populates="employees", passive_deletes=True)
     user = relationship("User", back_populates="employee", passive_deletes=True)
+    allocations = relationship("ProjectAllocation", back_populates="employee", passive_deletes=True)

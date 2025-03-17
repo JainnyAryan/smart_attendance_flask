@@ -9,6 +9,7 @@ from app.crud.attendance import get_attendance_calendar_data
 from app.crud.biometric_log import *
 from app.crud.employee import create_employee, get_employee, get_all_employees, update_employee, delete_employee
 from app.crud.project import *
+from app.crud.project_allocation import *
 from app.crud.system_log import get_logs_by_emp_id, get_logs_by_emp_id_in_date_range
 from app.schemas.biometric_log import *
 from app.schemas.employee import EmployeeCreate, EmployeeUpdate
@@ -16,6 +17,7 @@ from app.crud.department import create_department, get_department, get_all_depar
 from app.schemas.department import DepartmentCreate, DepartmentUpdate
 from app.crud.shift import create_shift, get_shift, get_all_shifts, update_shift, delete_shift
 from app.schemas.project import *
+from app.schemas.project_allocation import *
 from app.schemas.shift import ShiftCreate, ShiftUpdate
 from app.crud.designation import create_designation, get_designation, get_all_designations, update_designation, delete_designation
 from app.schemas.designation import DesignationCreate, DesignationUpdate
@@ -311,9 +313,8 @@ def update_project_api(project_id: str, project: ProjectUpdate, db: Session = De
         raise HTTPException(status_code=404, detail="Project not found")
     return db_project
 
+
 # Delete a project
-
-
 @router.delete("/projects/{project_id}", response_model=ProjectResponse)
 def delete_project_api(project_id: str, db: Session = Depends(get_db)):
     db_project = delete_project(db, project_id)
@@ -322,17 +323,51 @@ def delete_project_api(project_id: str, db: Session = Depends(get_db)):
     return db_project
 
 
-@router.put("/projects/required-skills/{project_id}", response_model=ProjectResponse)
-def update_required_skills(
-    project_id: str, 
-    skills_update: RequiredSkillsUpdate,  # Updated to use a request body
-    db: Session = Depends(get_db)
-):
-    db_project = get_project(db, project_id)
-    if not db_project:
-        raise HTTPException(status_code=404, detail="Project not found")
+# Project Metadata
+@router.get("/projects-metadata", response_model=ProjectMetadataResponse)
+def get_project_metadata_api():
+    return {"statuses" : [status.name.upper() for status in list(ProjectStatus)], "priorities" : [priority.name.upper() for priority in list(ProjectPriority)]}
+
+
+
+# @router.put("/projects/required-skills/{project_id}", response_model=ProjectResponse)
+# def update_required_skills(
+#     project_id: str, 
+#     skills_update: RequiredSkillsUpdate,  # Updated to use a request body
+#     db: Session = Depends(get_db)
+# ):
+#     db_project = get_project(db, project_id)
+#     if not db_project:
+#         raise HTTPException(status_code=404, detail="Project not found")
     
-    db_project.required_skills = skills_update.required_skills  # Update skills
-    db.commit()
-    db.refresh(db_project)
-    return db_project
+#     db_project.required_skills = skills_update.required_skills  # Update skills
+#     db.commit()
+#     db.refresh(db_project)
+#     return db_project
+
+#----------PROJECT ALLOCATIONS------------
+@router.post("/", response_model=ProjectAllocationResponse)
+def assign_employee(allocation_data: ProjectAllocationCreate, db: Session = Depends(get_db)):
+    """Assign an employee to a project"""
+    return create_project_allocation(db, allocation_data)
+
+@router.get("/{project_id}", response_model=list[ProjectAllocationResponse])
+def get_allocations(project_id: UUID, db: Session = Depends(get_db)):
+    """Get all allocations for a project"""
+    return get_project_allocations(db, project_id)
+
+@router.put("/{allocation_id}/status", response_model=ProjectAllocationResponse)
+def update_allocation_status(allocation_id: UUID, status: AllocationStatus, db: Session = Depends(get_db)):
+    """Update an employee's allocation status"""
+    allocation = update_project_allocation_status(db, allocation_id, status)
+    if not allocation:
+        raise HTTPException(status_code=404, detail="Allocation not found")
+    return allocation
+
+@router.delete("/{allocation_id}")
+def remove_allocation(allocation_id: UUID, db: Session = Depends(get_db)):
+    """Remove an employee from a project"""
+    allocation = remove_employee_from_project(db, allocation_id)
+    if not allocation:
+        raise HTTPException(status_code=404, detail="Allocation not found")
+    return {"message": "Employee removed from project"}
