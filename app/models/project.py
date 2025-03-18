@@ -32,5 +32,6 @@ class Project(BaseModel):
     max_team_size = Column(Integer)
     required_skills = Column(ARRAY(String))
     min_experience = Column(Integer, default=0)
-    
-    allocations = relationship("ProjectAllocation", back_populates="project", passive_deletes=True)
+
+    project_allocations = relationship(
+        "ProjectAllocation", back_populates="project", cascade="all, delete")

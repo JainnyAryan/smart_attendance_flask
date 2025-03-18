@@ -47,6 +47,6 @@ class ProjectAllocation(BaseModel):
 
     # Relationships
     project = relationship(
-        "Project", back_populates="allocations", cascade="all, delete")
+        "Project", back_populates="project_allocations", passive_deletes=True)
     employee = relationship(
-        "Employee", back_populates="allocations", cascade="all, delete")
+        "Employee", back_populates="project_allocations", passive_deletes=True)
