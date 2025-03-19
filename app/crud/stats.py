@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models.employee import Employee
 from app.models.department import Department
+from app.models.project import Project
 from app.models.shift import Shift
 from app.models.designation import Designation
 
@@ -10,4 +11,5 @@ def get_counts(db: Session):
         "department_count": db.query(Department).count(),
         "shift_count": db.query(Shift).count(),
         "designation_count": db.query(Designation).count(),
+        "project_count": db.query(Project).count(),
     }

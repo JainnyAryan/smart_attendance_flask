@@ -5,3 +5,4 @@ class StatsResponse(BaseModel):
     department_count: int
     shift_count: int
     designation_count: int
+    project_count: int
