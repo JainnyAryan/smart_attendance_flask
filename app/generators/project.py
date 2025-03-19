@@ -104,7 +104,7 @@ def generate_projects(num_projects=10):
                     priority = random.choice(PRIORITIES).value
 
                     max_team_size = random.randint(*TEAM_SIZE_RANGE)
-                    required_skills = random.sample(SKILLS, random.randint(2, 4))
+                    required_skills = random.sample(SKILLS, random.randint(2, 15))
                     min_experience = random.randint(*EXPERIENCE_RANGE)
 
                     # Define start and end dates

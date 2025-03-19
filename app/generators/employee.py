@@ -104,7 +104,7 @@ def create_employee(name, shift_id, dept_id, designation_id):
         "name": name,
         "email": email,
         "emp_code": emp_code,
-        "skills" : random.sample(SKILLS, random.randint(2, 6)),
+        "skills" : random.sample(SKILLS, random.randint(2, 15)),
         "experience": random.randint(0, 10),
         "shift_id": shift_id,
         "dept_id": dept_id,
