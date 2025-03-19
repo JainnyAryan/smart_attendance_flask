@@ -1,7 +1,7 @@
 from datetime import timedelta
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import text
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 from app.auth.auth import get_current_admin
 from app.crud.analytics import calculate_time_wastage
@@ -345,6 +345,63 @@ def assign_employee(allocation_data: ProjectAllocationCreate, db: Session = Depe
 def get_allocations(project_id: UUID, db: Session = Depends(get_db)):
     """Get all allocations for a project"""
     return get_project_allocations(db, project_id)
+
+
+@router.get("/project-allocations/{project_id}/suggested-employees/", response_model=List[UUID])
+def get_suggested_employees(project_id: UUID, db: Session = Depends(get_db)):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        return []
+
+    required_skills = set(project.required_skills)
+    min_experience = project.min_experience
+
+    # Fetch all employees along with their skills and allocation count
+    employees = db.query(
+        Employee.id,
+        Employee.experience,
+        func.count(ProjectAllocation.id).label("allocation_count"),
+        Employee.skills
+    ).outerjoin(ProjectAllocation, Employee.id == ProjectAllocation.employee_id) \
+     .group_by(Employee.id) \
+     .all()
+
+    # Step 1: Prepare employee data
+    employee_data = []
+    for emp_id, experience, allocation_count, emp_skills in employees:
+        emp_skills = set(emp_skills) if emp_skills else set()
+        matching_skills = required_skills.intersection(emp_skills)
+        match_count = len(matching_skills)
+
+        # Store only eligible employees (matching at least one skill and meeting experience criteria)
+        if match_count > 0 and experience >= min_experience and allocation_count < 4:
+            employee_data.append(
+                (emp_id, experience, emp_skills, allocation_count))
+
+    # Step 2: Sort employees by number of skills matched (descending) and experience (descending)
+    employee_data.sort(
+        key=lambda x: (-len(x[2].intersection(required_skills)), -x[1]))
+
+    # Step 3: Greedy selection to maximize skill coverage
+    selected_employees = []
+    covered_skills = set()
+
+    for emp_id, experience, emp_skills, allocation_count in employee_data:
+        # Check if adding this employee helps cover more required skills
+        new_skills = emp_skills - covered_skills  # Skills this employee contributes
+        if new_skills:
+            selected_employees.append((emp_id, experience))
+            covered_skills.update(new_skills)
+
+        # Stop if all required skills are covered
+        if covered_skills >= required_skills:
+            break
+
+    # Step 4: Sort final selected employees by experience (descending)
+    selected_employees.sort(key=lambda x: -x[1])
+
+    # Return only employee IDs
+    return [emp[0] for emp in selected_employees]
 
 
 @router.put("/project-allocations/{allocation_id}/status", response_model=ProjectAllocationResponse)
