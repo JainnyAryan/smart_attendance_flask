@@ -20,10 +20,25 @@ ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 
+SKILLS = [
+    "Python", "React", "SQL", "FastAPI", "Machine Learning", "Django", "Flutter", "Cloud Computing",
+    "NLP", "Blockchain", "Cybersecurity", "TensorFlow", "PyTorch", "AWS", "Azure", "Google Cloud",
+    "JavaScript", "TypeScript", "Node.js", "GraphQL", "Docker", "Kubernetes", "Jenkins", "CI/CD",
+    "Rust", "Go", "Java", "Spring Boot", "C++", "C#", "Swift", "Kotlin", "MongoDB", "PostgreSQL",
+    "MySQL", "Redis", "Elasticsearch", "Kafka", "RabbitMQ", "Big Data", "Hadoop", "Spark",
+    "TensorFlow.js", "OpenCV", "Pandas", "Scikit-learn", "Keras", "LangChain", "LlamaIndex",
+    "Power BI", "Tableau", "Excel Automation", "Graph Analytics", "Web Scraping", "REST API Design",
+    "OAuth2", "Zero Trust Security", "Penetration Testing", "Digital Forensics", "RPA (UiPath, Blue Prism)",
+    "Unity 3D", "Unreal Engine", "Metaverse Development", "Voice Recognition", "Chatbot Development",
+    "Remote Sensing", "IoT Security", "Edge Computing", "5G Networks", "Quantum Computing Basics"
+]
+
+
 # Step 1: Get Auth Token
 def get_auth_token():
     try:
-        response = requests.post(LOGIN_URL, json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
+        response = requests.post(
+            LOGIN_URL, json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
         if response.status_code == 200:
             access_token = response.json().get("access_token")
             HEADERS["Authorization"] = f"Bearer {access_token}"
@@ -41,8 +56,10 @@ def get_auth_token():
 def fetch_dropdown_data():
     try:
         shifts = requests.get(f"{BASE_URL}/shifts/", headers=HEADERS).json()
-        departments = requests.get(f"{BASE_URL}/departments/", headers=HEADERS).json()
-        designations = requests.get(f"{BASE_URL}/designations/", headers=HEADERS).json()
+        departments = requests.get(
+            f"{BASE_URL}/departments/", headers=HEADERS).json()
+        designations = requests.get(
+            f"{BASE_URL}/designations/", headers=HEADERS).json()
         print("✅ Dropdown data fetched")
         return shifts, departments, designations
     except Exception as e:
@@ -67,7 +84,8 @@ def get_random_names(count):
 # Step 4: Get suggested email and employee code
 def get_suggested_email_code(name):
     try:
-        response = requests.get(f"{BASE_URL}/employees/suggest-email-emp-code/{name}", headers=HEADERS)
+        response = requests.get(
+            f"{BASE_URL}/employees/suggest-email-emp-code/{name}", headers=HEADERS)
         data = response.json()
         return data.get("suggested_email"), data.get("suggested_emp_code")
     except Exception as e:
@@ -86,13 +104,16 @@ def create_employee(name, shift_id, dept_id, designation_id):
         "name": name,
         "email": email,
         "emp_code": emp_code,
+        "skills" : random.sample(SKILLS, random.randint(2, 6)),
+        "experience": random.randint(0, 10),
         "shift_id": shift_id,
         "dept_id": dept_id,
         "designation_id": designation_id
     }
 
     try:
-        response = requests.post(f"{BASE_URL}/employees/", json=employee_data, headers=HEADERS)
+        response = requests.post(
+            f"{BASE_URL}/employees/", json=employee_data, headers=HEADERS)
         if response.status_code in [200, 201]:
             print(f"✅ Successfully added {name} ({email})")
         else:

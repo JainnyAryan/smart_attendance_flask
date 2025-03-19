@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, UUID
+from sqlalchemy import ARRAY, Column, Integer, String, ForeignKey, UUID
 from sqlalchemy.orm import relationship
 from app.database import BaseModel
 
@@ -9,6 +9,8 @@ class Employee(BaseModel):
     name = Column(String, index=True)
     emp_code = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
+    skills = Column(ARRAY(String))
+    experience = Column(Integer, default=0)
     shift_id = Column(UUID(as_uuid=True), ForeignKey(
         'shifts.id', ondelete='CASCADE'), nullable=False)
     dept_id = Column(UUID(as_uuid=True), ForeignKey(

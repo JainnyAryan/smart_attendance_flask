@@ -1,3 +1,4 @@
+from typing import List, Optional
 from uuid import UUID
 from pydantic import BaseModel, EmailStr
 from app.schemas.shift import ShiftResponse
@@ -9,6 +10,8 @@ class EmployeeBase(BaseModel):
     name: str
     emp_code: str
     email: EmailStr
+    experience: Optional[int] = 0
+    skills: Optional[List[str]] = []
     shift_id: UUID
     dept_id: UUID
     designation_id: UUID
@@ -21,6 +24,8 @@ class EmployeeUpdate(BaseModel):
     name: str | None = None
     emp_code: str | None = None
     email: EmailStr | None = None
+    skills: Optional[List[str]] = []
+    experience: Optional[int] = 0
     shift_id: UUID | None = None
     dept_id: UUID | None = None
     designation_id: UUID | None = None
