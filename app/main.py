@@ -2,7 +2,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from app.api import employee, auth, admin, user, me
+from app.api import chat, employee, auth, admin, user, me
 from app.database import engine, Base
 from app.models import employee, department, designation, shift, biometric_log, system_log
 from app.api import employee as employee_api
@@ -38,6 +38,7 @@ app.include_router(employee_api.router, prefix="/api/employee")
 app.include_router(admin.router, prefix="/api/admin")
 app.include_router(user.router, prefix="/api")
 app.include_router(me.router, prefix="/api")
+app.include_router(chat.router, prefix="/api")
 
 @app.get("/")
 def read_root():
