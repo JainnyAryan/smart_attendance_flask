@@ -28,7 +28,7 @@ def log_out(log: SystemLogOut, db: Session = Depends(get_db)):
             status_code=404, detail="Active session not found.")
 
 
-@router.get("/system-log/employee/latest/{emp_id}", response_model=list[SystemLogResponse])
+@router.get("/system-log/employee/latest/{emp_id}", response_model=SystemLogResponse)
 def latest_log_of_employee(emp_id: UUID, db: Session = Depends(get_db)):
     logs = get_logs_by_emp_id(db, emp_id)
     if not logs:
