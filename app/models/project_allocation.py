@@ -20,8 +20,8 @@ class ProjectRole(enum.Enum):
 class AllocationStatus(enum.Enum):
     PENDING = "PENDING"  # Assigned but not yet started
     ACTIVE = "ACTIVE"  # Currently working on the project
-    COMPLETED = "COMPLETED"  # Finished work on the project
     ON_HOLD = "ON_HOLD"  # Temporarily stopped working
+    COMPLETED = "COMPLETED"  # Finished work on the project
     REMOVED = "REMOVED"  # Removed from the project
 
 
@@ -50,3 +50,8 @@ class ProjectAllocation(BaseModel):
         "Project", back_populates="project_allocations", passive_deletes=True)
     employee = relationship(
         "Employee", back_populates="project_allocations", passive_deletes=True)
+    status_logs = relationship(
+        "ProjectAllocationStatusLog",
+        back_populates="allocation",
+        cascade="all, delete-orphan"
+    )

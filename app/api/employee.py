@@ -1,8 +1,15 @@
+from app.crud.project_allocation_status_log import log_update_allocation_status
+from app.models.employee import Employee
+from app.schemas.project_allocation import ProjectAllocationResponse
+from app.crud.project_allocation import get_allocation_statuses, get_allocations_by_employee_id, update_project_allocation_status
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.auth.auth import get_current_user
 from app.crud.system_log import *
+from app.models.user import User
+from app.schemas.project_allocation_status_log import AllocationStatusUpdateRequest
 from app.schemas.system_log import *
 from ..database import get_db
 
@@ -10,7 +17,7 @@ from app.schemas.biometric_log import BiometricLogCreate, BiometricLogResponse, 
 from app.crud.biometric_log import *
 
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 # ----------SYSTEM lOG------------
@@ -63,5 +70,30 @@ def get_latest_log_by_employee(emp_id: UUID, db: Session = Depends(get_db)):
     return logs[0]
 
 
+# ----------------PROJECT ALLOCATIONS----------------
 
+@router.get("/my-project-allocations/", response_model=list[ProjectAllocationResponse])
+def get_allocations_for_employee(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    employees : list[Employee] = user.employee
+    emp_id = employees[0].id if employees else None
+    if not emp_id:
+        raise HTTPException(status_code=400, detail="User is not associated with any employee.")
+    allocations = get_allocations_by_employee_id(db, emp_id)
+    if not allocations:
+        raise HTTPException(
+            status_code=404, detail="No allocations found for this employee.")
+    return allocations
 
+@router.get("/allocation-statuses", response_model=list[str])
+def get_project_allocation_statuses(db: Session = Depends(get_db)):
+    return get_allocation_statuses()
+
+@router.put("/allocations/{allocation_id}/status", response_model=ProjectAllocationResponse)
+def update_allocation_status_endpoint(
+    allocation_id: UUID,
+    payload: AllocationStatusUpdateRequest,
+    db: Session = Depends(get_db)
+):
+    log_update_allocation_status(db, allocation_id, payload.status)
+    updated_allocation = update_project_allocation_status(db, allocation_id, payload.status)
+    return updated_allocation

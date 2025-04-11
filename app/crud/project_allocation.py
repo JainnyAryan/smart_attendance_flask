@@ -23,6 +23,7 @@ def get_project_allocations(db: Session, project_id: UUID):
     return (
         db.query(ProjectAllocation)
         .options(joinedload(ProjectAllocation.employee), joinedload(ProjectAllocation.project))
+        .order_by(ProjectAllocation.created_at.desc())
         .filter(ProjectAllocation.project_id == project_id)
         .all()
     )
@@ -33,6 +34,7 @@ def get_allocations_by_employee_id(db: Session, employee_id: UUID):
     return (
         db.query(ProjectAllocation)
         .options(joinedload(ProjectAllocation.project), joinedload(ProjectAllocation.employee))
+        .order_by(ProjectAllocation.created_at.desc())
         .filter(ProjectAllocation.employee_id == employee_id)
         .all()
     )
@@ -120,3 +122,7 @@ def suggested_employees(db: Session, project: Project):
     # Step 4: Sort final selected employees by experience (descending)
     selected_employees.sort(key=lambda x: -x[1])
     return selected_employees
+
+
+def get_allocation_statuses(db: Session = None):
+    return [status.value for status in AllocationStatus]
