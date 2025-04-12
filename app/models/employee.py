@@ -1,6 +1,14 @@
 from sqlalchemy import ARRAY, Column, Integer, String, ForeignKey, UUID
 from sqlalchemy.orm import relationship
 from app.database import BaseModel
+from app.models.system_log import SystemLog
+from app.models.biometric_log import BiometricLog
+from app.models.shift import Shift
+from app.models.department import Department
+from app.models.designation import Designation
+from app.models.user import User
+from app.models.project_allocation import ProjectAllocation
+from app.models.project_allocation_status_log import ProjectAllocationStatusLog
 
 
 class Employee(BaseModel):

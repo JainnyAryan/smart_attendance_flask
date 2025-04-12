@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 import requests
 from fastapi import APIRouter, Depends
+from app.api.performance import get_employee_performance_score
 from app.auth.auth import get_current_user
 from app.crud.chat import *
 from app.database import get_db
@@ -66,6 +67,15 @@ async def chat_endpoint(request: ChatRequest, db=Depends(get_db), user: User = D
             alloc_data = [ProjectAllocationResponse.model_validate(
                 a).model_dump() for a in alloc_data]
             return {"response": response_msg, "confidence": confidence, "intent": intent, "data": {"project_allocations": alloc_data}}
+        
+        case "my_current_score":
+            response_msg = msg_response
+            score_data = None
+            score_data = get_employee_performance_score(
+                db=db, employee_id=user.employee[0].id)
+            if not score_data:
+                return {"response": "Couldn't fetch performance score. Please try again later...", "confidence": confidence, "intent": intent, "data": None}
+            return {"response": response_msg, "confidence": confidence, "intent": intent, "data": {"score": score_data}}
             
 
     # =================ADMIN INTENTS=================

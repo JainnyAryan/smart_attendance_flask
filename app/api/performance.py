@@ -11,7 +11,8 @@ from datetime import datetime
 from app.models.user import User
 from app.utils.performance import compute_allocation_metrics, group_status_logs_by_allocation, score_allocation
 
-router = APIRouter(dependencies=[Depends(get_current_user)])
+# router = APIRouter(dependencies=[Depends(get_current_user)])
+router = APIRouter()
 
 @router.get("/employee/{employee_id}/performance-score", response_model=float)
 def get_employee_performance_score(employee_id: UUID, db: Session = Depends(get_db)):
@@ -63,7 +64,8 @@ def get_allocation_score_breakdown(employee_id: UUID, db: Session = Depends(get_
 
 #--------------FOR ADMINS-----------------
 @router.get("/admin/employee-performance-scores")
-def get_all_employee_scores(db: Session = Depends(get_db), user: User = Depends(get_current_admin)):
+# def get_all_employee_scores(db: Session = Depends(get_db), user: User = Depends(get_current_admin)):
+def get_all_employee_scores(db: Session = Depends(get_db)):
     from app.models.employee import Employee
     employees = db.query(Employee).all()
     scores = []

@@ -9,6 +9,7 @@ def group_status_logs_by_allocation(logs):
         logs.sort(key=lambda x: x.changed_at)
     return grouped
 
+
 def compute_allocation_metrics(logs, deadline):
     total_time = 0
     active_time = 0
@@ -32,8 +33,9 @@ def compute_allocation_metrics(logs, deadline):
         "active_time": active_time,
         "hold_time": hold_time,
         "transitions": transition_counts,
-        "completed_on_time": completed_time and completed_time.date() <= deadline
+        "completed_on_time": completed_time is not None and completed_time.date() <= deadline
     }
+
 
 def score_allocation(metrics):
     if metrics["total_time"] == 0:

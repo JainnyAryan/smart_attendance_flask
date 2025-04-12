@@ -1,4 +1,5 @@
 from uuid import UUID
+from fastapi import HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
@@ -10,11 +11,21 @@ from app.models.project import Project
 
 def create_project_allocation(db: Session, allocation_data: ProjectAllocationCreate):
     """Assign an employee to a project and return full project and employee details."""
+    # Check how many employees are already allocated to this project
+    current_allocs = db.query(ProjectAllocation).filter(
+        ProjectAllocation.project_id == allocation_data.project_id
+    ).count()
+    # Fetch project details to get max_team_size
+    project = db.query(Project).filter_by(id=allocation_data.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if current_allocs >= project.max_team_size:
+        raise HTTPException(status_code=400, detail="Project has reached its max team size")
+    # Proceed with creating the allocation
     allocation = ProjectAllocation(**allocation_data.model_dump())
     db.add(allocation)
     db.commit()
     db.refresh(allocation)
-
     return get_project_allocation_by_id(db, allocation.id)
 
 
