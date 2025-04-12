@@ -1,5 +1,6 @@
 from app.crud.project_allocation_status_log import get_status_logs_by_allocation_id, log_update_allocation_status
 from app.models.employee import Employee
+from app.schemas.performance import WhatIfScoreInput
 from app.schemas.project_allocation import ProjectAllocationResponse
 from app.crud.project_allocation import get_allocation_statuses, get_allocations_by_employee_id, update_project_allocation_status
 from uuid import UUID
@@ -103,3 +104,20 @@ def update_allocation_status_endpoint(
     log_update_allocation_status(db, allocation_id, payload.status)
     updated_allocation = update_project_allocation_status(db, allocation_id, payload.status)
     return updated_allocation
+
+@router.post("/what-if-score")
+def calculate_what_if_score(payload: WhatIfScoreInput, db: Session = Depends(get_db)):
+    # Convert to 0-1 range
+    active_ratio = payload.active_time_pct / 100
+    hold_ratio = payload.hold_time_pct / 100
+    transitions = payload.avg_transitions
+
+    # Use the same formula you already have
+    score = (
+        0.5 * active_ratio +
+        0.2 * int(payload.completed_on_time) +
+        0.2 * (1 - hold_ratio) -
+        0.1 * min(transitions / 10, 1.0)
+    )
+
+    return {"predicted_score": round(score * 100, 2)}

@@ -86,6 +86,10 @@ async def chat_endpoint(request: ChatRequest, db=Depends(get_db), user: User = D
                 return {"response": "Couldn't fetch performance score breakdown. Please try again later...", "confidence": confidence, "intent": intent, "data": None}
             return {"response": response_msg, "confidence": confidence, "intent": intent, "data": {"breakdown_data": breakdown_data}}
 
+        case "what_if_score_prediction":
+            response_msg = msg_response
+            return {"response": response_msg, "confidence": confidence, "intent": intent, "data": None}
+
     # =================ADMIN INTENTS=================
     if category == "admin_intents" and not user.is_admin:
         return {"response": "You're not authorized to access this information.", "confidence": confidence, "intent": intent, "data": None}
