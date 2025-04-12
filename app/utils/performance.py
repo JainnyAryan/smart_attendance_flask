@@ -19,13 +19,16 @@ def compute_allocation_metrics(logs, deadline):
 
     for log in logs:
         if log.duration_spent:
-            total_time += log.duration_spent.total_seconds()
+            seconds = log.duration_spent.total_seconds()
+            total_time += seconds
+            if log.from_status.name == "ACTIVE":
+                active_time += seconds
+            elif log.from_status.name == "ON_HOLD":
+                hold_time += seconds
+
         transition_counts += 1
-        if log.to_status.name == "ACTIVE":
-            active_time += log.duration_spent.total_seconds() if log.duration_spent else 0
-        elif log.to_status.name == "ON_HOLD":
-            hold_time += log.duration_spent.total_seconds() if log.duration_spent else 0
-        elif log.to_status.name == "COMPLETED":
+
+        if log.to_status.name == "COMPLETED":
             completed_time = log.changed_at
 
     return {

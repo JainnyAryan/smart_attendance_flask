@@ -1,5 +1,4 @@
 import os
-import random
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from sqlalchemy import create_engine
@@ -7,58 +6,66 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.models.project_allocation import ProjectAllocation
 from app.models.project_allocation_status_log import AllocationStatus, ProjectAllocationStatusLog
 from app.crud.project_allocation import update_project_allocation_status
+import random
 
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(DATABASE_URL)
 SessionCustom = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-def log_update_allocation_status(db: Session, allocation_id, new_status):
-    allocation = db.query(ProjectAllocation).filter(ProjectAllocation.id == allocation_id).first()
-    if not allocation or allocation.status == new_status:
-        return
-
-    # Random duration between 1 hour and 3 days
-    duration = timedelta(seconds=random.randint(3600, 3 * 24 * 3600))
-    fake_changed_at = allocation.updated_at + duration if allocation.updated_at else datetime.utcnow()
-
-    # Log the status change
+def log_status(db, alloc, from_status, to_status, changed_at, duration):
     log = ProjectAllocationStatusLog(
-        allocation_id=allocation.id,
-        from_status=allocation.status,
-        to_status=new_status,
-        changed_at=fake_changed_at,
+        allocation_id=alloc.id,
+        from_status=from_status,
+        to_status=to_status,
+        changed_at=changed_at,
         duration_spent=duration
     )
     db.add(log)
-    allocation.status = new_status
-    allocation.updated_at = fake_changed_at
+    alloc.status = to_status
+    alloc.updated_at = changed_at
     db.commit()
-    db.refresh(allocation)
+    db.refresh(alloc)
 
-def generate_status_logs():
+def generate_realistic_status_logs():
     db: Session = SessionCustom()
     allocations = db.query(ProjectAllocation).all()
-    statuses = [status.name for status in AllocationStatus]
 
     for alloc in allocations:
-        num_changes = random.randint(2, 5)  # Simulate between 2 and 5 status changes for each allocation
-        current_status = alloc.status
+        current_status = AllocationStatus.PENDING
+        start_time = alloc.allocated_on or (datetime.utcnow() - timedelta(days=10))
+        log_time = datetime.combine(start_time, datetime.min.time())
+        print(f"\nAllocation: {alloc.id} - Starting at {log_time.date()}")
 
-        for _ in range(num_changes):
-            # Pick a new status, ensuring it's different from the current status
-            new_status = random.choice([s for s in statuses if s != current_status])
+        # Step 1: PENDING to ACTIVE
+        duration = timedelta(hours=random.randint(2, 10))
+        log_time += duration
+        log_status(db, alloc, current_status, AllocationStatus.ACTIVE, log_time, duration)
+        print(f"  {current_status.name} → ACTIVE for {duration}")
+        current_status = AllocationStatus.ACTIVE
 
-            # Apply the status change and log it
-            log_update_allocation_status(db, alloc.id, new_status)
-            update_project_allocation_status(db, alloc.id, new_status)
+        # Step 2: Optional ON_HOLD + return to ACTIVE
+        if random.random() < 0.5:  # 50% chance to go on hold
+            duration = timedelta(hours=random.randint(1, 8))
+            log_time += duration
+            log_status(db, alloc, current_status, AllocationStatus.ON_HOLD, log_time, duration)
+            print(f"  ACTIVE → ON_HOLD for {duration}")
+            current_status = AllocationStatus.ON_HOLD
 
-            print(f"Updated status for allocation {alloc.id} from {current_status} to {new_status}")
+            duration = timedelta(hours=random.randint(2, 12))
+            log_time += duration
+            log_status(db, alloc, current_status, AllocationStatus.ACTIVE, log_time, duration)
+            print(f"  ON_HOLD → ACTIVE for {duration}")
+            current_status = AllocationStatus.ACTIVE
 
-            # Update current status for the next iteration
-            current_status = new_status
+        # Step 3: End with COMPLETED or REMOVED
+        final_status = random.choice([AllocationStatus.COMPLETED, AllocationStatus.REMOVED])
+        duration = timedelta(hours=random.randint(1, 6))
+        log_time += duration
+        log_status(db, alloc, current_status, final_status, log_time, duration)
+        print(f"  {current_status.name} → {final_status.name} for {duration}")
 
     db.close()
 
 if __name__ == "__main__":
-    generate_status_logs()
+    generate_realistic_status_logs()

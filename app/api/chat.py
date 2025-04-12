@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 import requests
 from fastapi import APIRouter, Depends
-from app.api.performance import get_employee_performance_score
+from app.api.performance import get_allocation_score_breakdown, get_employee_performance_score
 from app.auth.auth import get_current_user
 from app.crud.chat import *
 from app.database import get_db
@@ -57,7 +57,7 @@ async def chat_endpoint(request: ChatRequest, db=Depends(get_db), user: User = D
             system_logs = [SystemLogResponse.model_validate(
                 s).model_dump() for s in attd_data["system_logs"]]
             return {"response": response_msg, "confidence": confidence, "intent": intent, "data": {"biometric_logs": biometric_logs, "system_logs": system_logs}}
-        
+
         case "my_project_allocations":
             response_msg = msg_response
             alloc_data = None
@@ -67,7 +67,7 @@ async def chat_endpoint(request: ChatRequest, db=Depends(get_db), user: User = D
             alloc_data = [ProjectAllocationResponse.model_validate(
                 a).model_dump() for a in alloc_data]
             return {"response": response_msg, "confidence": confidence, "intent": intent, "data": {"project_allocations": alloc_data}}
-        
+
         case "my_current_score":
             response_msg = msg_response
             score_data = None
@@ -76,7 +76,15 @@ async def chat_endpoint(request: ChatRequest, db=Depends(get_db), user: User = D
             if not score_data:
                 return {"response": "Couldn't fetch performance score. Please try again later...", "confidence": confidence, "intent": intent, "data": None}
             return {"response": response_msg, "confidence": confidence, "intent": intent, "data": {"score": score_data}}
-            
+
+        case "my_score_breakdown":
+            response_msg = msg_response
+            breakdown_data = None
+            breakdown_data = get_allocation_score_breakdown(
+                db=db, employee_id=user.employee[0].id)
+            if not breakdown_data:
+                return {"response": "Couldn't fetch performance score breakdown. Please try again later...", "confidence": confidence, "intent": intent, "data": None}
+            return {"response": response_msg, "confidence": confidence, "intent": intent, "data": {"breakdown_data": breakdown_data}}
 
     # =================ADMIN INTENTS=================
     if category == "admin_intents" and not user.is_admin:

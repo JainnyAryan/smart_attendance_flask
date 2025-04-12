@@ -1,4 +1,4 @@
-from app.crud.project_allocation_status_log import log_update_allocation_status
+from app.crud.project_allocation_status_log import get_status_logs_by_allocation_id, log_update_allocation_status
 from app.models.employee import Employee
 from app.schemas.project_allocation import ProjectAllocationResponse
 from app.crud.project_allocation import get_allocation_statuses, get_allocations_by_employee_id, update_project_allocation_status
@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.auth.auth import get_current_user
 from app.crud.system_log import *
 from app.models.user import User
-from app.schemas.project_allocation_status_log import AllocationStatusUpdateRequest
+from app.schemas.project_allocation_status_log import AllocationStatusLogResponse, AllocationStatusUpdateRequest
 from app.schemas.system_log import *
 from ..database import get_db
 
@@ -53,7 +53,6 @@ def remove_log(log_id: UUID, db: Session = Depends(get_db)):
 
 # -------------BIOMETRIC LOGS-------------------
 
-
 # Create a new biometric log
 @router.post("/biometric-logs", response_model=BiometricLogResponse)
 def create_log(biometric_log: BiometricLogCreate, db: Session = Depends(get_db)):
@@ -87,6 +86,13 @@ def get_allocations_for_employee(db: Session = Depends(get_db), user: User = Dep
 @router.get("/allocation-statuses", response_model=list[str])
 def get_project_allocation_statuses(db: Session = Depends(get_db)):
     return get_allocation_statuses()
+
+@router.get("/allocations/{allocation_id}/status-history", response_model=list[AllocationStatusLogResponse])
+def get_allocation_status_history(allocation_id: UUID, db: Session = Depends(get_db)):
+    logs = get_status_logs_by_allocation_id(db, allocation_id)
+    if not logs:
+        raise HTTPException(status_code=404, detail="No status history found for this allocation.")
+    return logs
 
 @router.put("/allocations/{allocation_id}/status", response_model=ProjectAllocationResponse)
 def update_allocation_status_endpoint(
