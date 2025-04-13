@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
+from app.api.performance import get_all_employee_scores
 from app.models.project_allocation import ProjectAllocation, AllocationStatus
 from app.schemas.project_allocation import ProjectAllocationCreate, ProjectAllocationResponse
 from app.models.employee import Employee
@@ -16,11 +17,13 @@ def create_project_allocation(db: Session, allocation_data: ProjectAllocationCre
         ProjectAllocation.project_id == allocation_data.project_id
     ).count()
     # Fetch project details to get max_team_size
-    project = db.query(Project).filter_by(id=allocation_data.project_id).first()
+    project = db.query(Project).filter_by(
+        id=allocation_data.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     if current_allocs >= project.max_team_size:
-        raise HTTPException(status_code=400, detail="Project has reached its max team size")
+        raise HTTPException(
+            status_code=400, detail="Project has reached its max team size")
     # Proceed with creating the allocation
     allocation = ProjectAllocation(**allocation_data.model_dump())
     db.add(allocation)
@@ -85,11 +88,11 @@ def remove_employee_from_project(db: Session, allocation_id: UUID):
 
 
 def suggested_employees(db: Session, project: Project):
-    """Get all suggested employees for the project based on required skills and experience."""
+    """Suggest employees based on skill match, experience, and score."""
     required_skills = set(project.required_skills)
     min_experience = project.min_experience
 
-    # Fetch all employees along with their skills and allocation count
+    # Step 1: Get all employees with their allocation count and skills
     employees = db.query(
         Employee.id,
         Employee.experience,
@@ -99,39 +102,46 @@ def suggested_employees(db: Session, project: Project):
      .group_by(Employee.id) \
      .all()
 
-    # Step 1: Prepare employee data
+    # Step 2: Get employee scores and convert to dictionary
+    employee_scores = get_all_employee_scores(db)
+    employee_scores_dict = {
+        emp['employee_id']: emp['score'] for emp in employee_scores
+    }
+
+    # Step 3: Prepare employee data
     employee_data = []
     for emp_id, experience, allocation_count, emp_skills in employees:
         emp_skills = set(emp_skills) if emp_skills else set()
-        matching_skills = required_skills.intersection(emp_skills)
-        match_count = len(matching_skills)
+        match_count = len(required_skills.intersection(emp_skills))
+        score = employee_scores_dict.get(emp_id, 0.0)
 
-        # Store only eligible employees (matching at least one skill and meeting experience criteria)
         if match_count > 0 and experience >= min_experience and allocation_count < 4:
-            employee_data.append(
-                (emp_id, experience, emp_skills, allocation_count))
+            employee_data.append({
+                "employee_id": emp_id,
+                "experience": experience,
+                "skills": emp_skills,
+                "allocation_count": allocation_count,
+                "match_count": match_count,
+                "score": score
+            })
 
-    # Step 2: Sort employees by number of skills matched (descending) and experience (descending)
+    # Step 4: Sort by match_count, then experience, then score (all descending)
     employee_data.sort(
-        key=lambda x: (-len(x[2].intersection(required_skills)), -x[1]))
+        key=lambda x: (-x["match_count"], -x["experience"], -x["score"])
+    )
 
-    # Step 3: Greedy selection to maximize skill coverage
+    # Step 5: Greedy selection to maximize skill coverage
     selected_employees = []
     covered_skills = set()
 
-    for emp_id, experience, emp_skills, allocation_count in employee_data:
-        # Check if adding this employee helps cover more required skills
-        new_skills = emp_skills - covered_skills  # Skills this employee contributes
+    for emp in employee_data:
+        new_skills = emp["skills"] - covered_skills
         if new_skills:
-            selected_employees.append((emp_id, experience))
+            selected_employees.append(emp)
             covered_skills.update(new_skills)
-
-        # Stop if all required skills are covered
         if covered_skills >= required_skills:
             break
 
-    # Step 4: Sort final selected employees by experience (descending)
-    selected_employees.sort(key=lambda x: -x[1])
     return selected_employees
 
 

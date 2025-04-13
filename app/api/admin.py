@@ -354,7 +354,7 @@ def get_suggested_employees(project_id: UUID, db: Session = Depends(get_db)):
         return []
     selected_employees = suggested_employees(db, project)
     # Return only employee IDs
-    return [emp[0] for emp in selected_employees]
+    return [emp['employee_id'] for emp in selected_employees]
 
 
 @router.put("/project-allocations/{allocation_id}/status", response_model=ProjectAllocationResponse)
