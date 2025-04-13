@@ -38,9 +38,27 @@ async def chat_endpoint(request: ChatRequest, db=Depends(get_db), user: User = D
 
     # =================GREETINGS=================
     if category == "greetings":
-        name = get_my_name(user=user)
-        response_msg = msg_response.format(name)
-        return {"response": response_msg, "confidence": confidence, "intent": intent, "data": None}
+        if intent != "features":
+            name = get_my_name(user=user)
+            response_msg = msg_response.format(name)
+            return {"response": response_msg, "confidence": confidence, "intent": intent, "data": None}
+        else:
+            response_msg = msg_response
+            feature_list = [
+                "📁 Get details of any employee",
+                "📊 View attendance summary of employees",
+                "📌 View all projects",
+                "📂 See project details",
+                "👥 View current allocations of a project",
+                "💡 Get allocation suggestions for a project"
+            ] if user.is_admin else [
+                "🎯 Check my current performance score",
+                "📊 View breakdown of my score",
+                "📁 View my project allocations",
+                "🕒 Check today's attendance logs",
+                "🔮 Predict my score with What-If Panel"
+            ]
+            return {"response": response_msg, "confidence": confidence, "intent": intent, "data": {"features": feature_list}}
 
     # =================EMPLOYEE INTENTS=================
     if category == "employee_intents" and user.is_admin:
