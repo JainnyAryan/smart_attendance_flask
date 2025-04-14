@@ -1,3 +1,4 @@
+import json
 import os
 from dotenv import load_dotenv
 import requests
@@ -13,12 +14,16 @@ from app.schemas.project import ProjectResponse
 from app.schemas.employee import EmployeeResponse
 from app.schemas.project_allocation import ProjectAllocationResponse
 from app.schemas.system_log import SystemLogResponse
+from dotmap import DotMap
 
 
 router = APIRouter()
 
 load_dotenv()
 CHATBOT_SERVICE_URL = os.getenv("CHATBOT_BASE_URL")
+
+chatbot_features = DotMap(
+    dict(json.load(open("app/data/chatbot_features.json"))))
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -44,20 +49,7 @@ async def chat_endpoint(request: ChatRequest, db=Depends(get_db), user: User = D
             return {"response": response_msg, "confidence": confidence, "intent": intent, "data": None}
         else:
             response_msg = msg_response
-            feature_list = [
-                "📁 Get details of any employee",
-                "📊 View attendance summary of employees",
-                "📌 View all projects",
-                "📂 See project details",
-                "👥 View current allocations of a project",
-                "💡 Get allocation suggestions for a project"
-            ] if user.is_admin else [
-                "🎯 Check my current performance score",
-                "📊 View breakdown of my score",
-                "📁 View my project allocations",
-                "🕒 Check today's attendance logs",
-                "🔮 Predict my score with What-If Panel"
-            ]
+            feature_list = chatbot_features.admin if user.is_admin else chatbot_features.employee
             return {"response": response_msg, "confidence": confidence, "intent": intent, "data": {"features": feature_list}}
 
     # =================EMPLOYEE INTENTS=================

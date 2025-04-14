@@ -1,0 +1,17 @@
+{
+  "admin": [
+    "📁 Get details of any employee",
+    "📊 View attendance summary of employees",
+    "📌 View all projects",
+    "📂 See project details",
+    "👥 View current allocations of a project",
+    "💡 Get allocation suggestions for a project"
+  ],
+  "employee": [
+    "🎯 Check my current performance score",
+    "📊 Check my score breakdown",
+    "📁 View my project allocations",
+    "🕒 Check today's attendance logs",
+    "🔮 Predict my score with What-If Panel"
+  ]
+}
